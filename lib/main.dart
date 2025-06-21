@@ -9,9 +9,10 @@ import 'package:technical_assessment/core/utils/simple_bloc_observer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  configureDependencies();
+  await configureDependencies();
 
   Bloc.observer = SimpleBlocObserver();
+
   runApp(MyApp());
 }
 
