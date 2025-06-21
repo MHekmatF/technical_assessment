@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:hive/hive.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -68,12 +68,12 @@ class DashboardCubit extends Cubit<DashboardState> {
       } else {
         emit(state.copyWith(
           isCheckIn: false,
-          message: "You are not within the office area!",
+          message: "error ,You are not within the office area!",
           isLoading: false,
         ));
       }
     } catch (e) {
-      emit(state.copyWith(message: "Failed to get location: ${e.toString()}", isLoading: false));
+      emit(state.copyWith(message: "error Failed to get location: ${e.toString()}", isLoading: false));
     }
   }
 
@@ -81,7 +81,7 @@ class DashboardCubit extends Cubit<DashboardState> {
     final status = await Permission.storage.request();
 
     if (!status.isGranted) {
-      emit(state.copyWith(message: "Storage permission denied"));
+      emit(state.copyWith(message: "error Storage permission denied"));
       return null;
     }
 
@@ -92,13 +92,14 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   Future<Map<String, String>> extractIdData(String imagePath) async {
     final inputImage = InputImage.fromFilePath(imagePath);
-    final textRecognizer = GoogleMlKit.vision.textRecognizer();
+    final textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+
     final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
 
     final fullText = recognizedText.text;
     print("Detected Text: $fullText");
 
-    final nameRegex = RegExp(r'Name\s*[:\-]?\s*([A-Za-z\s]+)', caseSensitive: false);
+    final nameRegex = RegExp(r'Name\s*[:\-]?\s*(\w+\s*\w*)', caseSensitive: false);
     final idRegex = RegExp(r'(\d{3}-\d{4}-\d{7}-\d)', caseSensitive: false);
 
     final nameMatch = nameRegex.firstMatch(fullText);
@@ -107,10 +108,11 @@ class DashboardCubit extends Cubit<DashboardState> {
     await textRecognizer.close();
 
     return {
-      'name': nameMatch?.group(1)?.trim() ?? '',
+      'name': nameMatch?.group(1) ?? '',
       'id': idMatch?.group(1) ?? '',
     };
   }
+
 
   Future<void> handleIdExtraction(String imagePath) async {
     emit(state.copyWith(isLoading: true, message: null));
@@ -121,7 +123,7 @@ class DashboardCubit extends Cubit<DashboardState> {
       // No data extracted — show error message
       emit(state.copyWith(
         isLoading: false,
-        message: "No valid ID or Name found in the uploaded photo.",
+        message: "error No valid ID or Name found in the uploaded photo.",
         ocrName: null,
         ocrId: null,
       ));
