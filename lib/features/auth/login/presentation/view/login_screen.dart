@@ -115,6 +115,7 @@ class LoginScreen extends StatelessWidget {
                                 backgroundColor: Colors.green,
                               ),
                             );
+                            Navigator.pushReplacementNamed(context, '/home');
 
                           } else if (state is LoginFailure) {
                             Navigator.pop(context);
